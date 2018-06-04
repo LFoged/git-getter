@@ -8,7 +8,7 @@ const header = doc.querySelector('.header');
 const profileSection = doc.querySelector('.profile-section');
 
 
-// FUNCTION - create an element, assign className & another attribute if needed
+// FUNCTION - create an element, assign className
 const newElement = (element, classNm) => {
   const newEl = doc.createElement(element);
   newEl.className = classNm;
@@ -38,6 +38,12 @@ const prepUrls = (username) => {
 const getData = async(urls) => {
   const profileRequest = await fetch(urls.profileUrl);
   const reposRequest = await fetch(urls.reposUrl);
+
+  const status = profileRequest.status;
+  if (status === 404) return showAlert('error', 'No matching profile found');
+  if (status === 403) return showAlert('error', 'Request limit reached. Try again later');
+  if (status !== 200) return showAlert('error');
+
   const profileData = await profileRequest.json();
   const reposData = await reposRequest.json();
   
@@ -47,19 +53,20 @@ const getData = async(urls) => {
 
 // FUNCTION -
 const printer = (data) => {
-  if (data.profileData.message) {
-    return showAlert('error', 'No matching profile found');
+  if (data) {
+    const profile = data.profileData;
+    const repos = data.reposData;
+    const profileFragment = doc.createDocumentFragment();
+    const reposFragment = doc.createDocumentFragment();
+  
+    profileFragment.innerHTML = ( 
+      ` `
+    );
+  
+    if (repos.length < 1) showAlert('error', `No repos found for '${profile.login}'`);
+
+    return console.log(data);
   }
-  const user = data.profileData;
-  const repos = data.reposData;
-
-  const fragment = doc.createDocumentFragment();
-  fragment.innerHTML = 
-    `
-
-    `;
-
-  return console.log(data);
 };
 
 
@@ -80,10 +87,11 @@ const showAlert = (alertType, msg="AWW SHUCKS! Something went wrong!") => {
 // eventListener on 'searchInput' to start program
 searchInput.addEventListener('keyup', (event) => {
   const username = event.target.value;
-  if (!username || (/^\s+$/).test(username)) {
+  if ((/^\s+$/).test(username)) {
     return showAlert('error', 'Please enter a username');
   }
-  const urls = prepUrls(username);
-  getData(urls).then(printer).catch(console.error);
+  if (username) {
+    const urls = prepUrls(username);
+    getData(urls).then(printer).catch(console.error);
+  }
 });
-
