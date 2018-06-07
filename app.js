@@ -1,5 +1,12 @@
 'use strict';
 
+/** 
+ * TODO:
+ * finish 'printer' func.
+ * styling
+ */
+
+
 // GLOBAL VARIABLES
 const doc = document;
 const searchInput = doc.querySelector('.search-input');
@@ -8,7 +15,8 @@ const header = doc.querySelector('.header');
 const profileSection = doc.querySelector('.profile-section');
 
 
-// FUNCTION - create an element, assign className
+// PERIPHERAL / 'HELPER' FUNCTIONS
+// FUNCTION - create an element & assign className
 const newElement = (element, classNm) => {
   const newEl = doc.createElement(element);
   newEl.className = classNm;
@@ -16,7 +24,19 @@ const newElement = (element, classNm) => {
   return newEl;
 };
 
+// FUNCTION - display feedback / alert message to user 
+const showAlert = (alertType, msg="Aww shucks! Something went wrong!") => {
+  const alertDiv = newElement('div', `alert ${alertType}`);
+  alertDiv.appendChild(doc.createTextNode(msg));
+  // append 'alertDiv' to DOM if none there & remove after 2.5s if present
+  if (!doc.querySelector('.alert')) container.insertBefore(alertDiv, header);
+  setTimeout(() => {
+    if (doc.querySelector('.alert')) return doc.querySelector('.alert').remove();
+  }, 2500);
+};
 
+
+// CORE FUNCTIONS
 // FUNCTION - construct URLs for requests used in 'getData'
 const prepUrls = (username) => {
   const url = {
@@ -33,8 +53,7 @@ const prepUrls = (username) => {
   return {profileUrl, reposUrl};
 };
 
-
-// FUNCTION - async/await. Fetch request for data 
+// FUNCTION - async/await. Fetch data from github 
 const getData = async(urls) => {
   const profileRequest = await fetch(urls.profileUrl);
   const reposRequest = await fetch(urls.reposUrl);
@@ -50,8 +69,7 @@ const getData = async(urls) => {
   return {profileData, reposData};
 };
 
-
-// FUNCTION -
+// FUNCTION - print
 const printer = (data) => {
   if (data) {
     const profile = data.profileData;
@@ -70,27 +88,12 @@ const printer = (data) => {
 };
 
 
-// FUNCTION - display feedback / alert message to user 
-const showAlert = (alertType, msg="AWW SHUCKS! Something went wrong!") => {
-  const alertDiv = newElement('div', `alert ${alertType}`);
-  alertDiv.appendChild(doc.createTextNode(msg));
-  // append 'alertDiv' to DOM if there is none there already
-  if (!doc.querySelector('.alert')) container.insertBefore(alertDiv, header);
-  // remove 'alertDiv' after 2.5s, if present
-  setTimeout(() => {
-    if (doc.querySelector('.alert')) return doc.querySelector('.alert').remove();
-  }, 2500);
-};
-
-
-
-// eventListener on 'searchInput' to start program
+// eventListener on 'searchInput' - initializes program
 searchInput.addEventListener('keyup', (event) => {
   const username = event.target.value;
-  if ((/^\s+$/).test(username)) {
+  if (!username || (/^\s+$/).test(username)) {
     return showAlert('error', 'Please enter a username');
-  }
-  if (username) {
+  } else {
     const urls = prepUrls(username);
     getData(urls).then(printer).catch(console.error);
   }
