@@ -31,7 +31,7 @@ const showAlert = (alertType, msg="Aww shucks! Something went wrong!") => {
   // append 'alertDiv' to DOM if none there & remove after 2.5s if present
   if (!doc.querySelector('.alert')) container.insertBefore(alertDiv, header);
   setTimeout(() => {
-    if (doc.querySelector('.alert')) return doc.querySelector('.alert').remove();
+   doc.querySelector('.alert') ? doc.querySelector('.alert').remove() : null;
   }, 2500);
 };
 
@@ -88,13 +88,14 @@ const printer = (data) => {
 };
 
 
-// eventListener on 'searchInput' - initializes program
+// eventListener on 'searchInput' - initializes & controls program
 searchInput.addEventListener('keyup', (event) => {
   const username = event.target.value;
   if (!username || (/^\s+$/).test(username)) {
     return showAlert('error', 'Please enter a username');
-  } else {
-    const urls = prepUrls(username);
-    getData(urls).then(printer).catch(console.error);
   }
+  const urls = prepUrls(username);
+  getData(urls)
+    .then(printer)
+    .catch(console.error);
 });
