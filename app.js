@@ -8,17 +8,19 @@
 
 
 // GLOBAL VARIABLES
-const doc = document;
-const searchInput = doc.querySelector('.search-input');
-const container = doc.querySelector('.container');
-const header = doc.querySelector('.header');
-const profileSection = doc.querySelector('.profile-section');
+const dom = Object.freeze({
+  searchInput: document.querySelector('.search-input'),
+  container: document.querySelector('.container'),
+  header: document.querySelector('.header'),
+  profileSection: document.querySelector('.profile-section')
+});
+
 
 
 // PERIPHERAL / 'HELPER' FUNCTIONS
 // FUNCTION - create an element & assign className
 const newElement = (element, classNm) => {
-  const newEl = doc.createElement(element);
+  const newEl = document.createElement(element);
   newEl.className = classNm;
 
   return newEl;
@@ -26,13 +28,16 @@ const newElement = (element, classNm) => {
 
 // FUNCTION - display feedback / alert message to user 
 const showAlert = (alertType, msg="Aww shucks! Something went wrong!") => {
-  const alertDiv = newElement('div', `alert ${alertType}`);
-  alertDiv.appendChild(doc.createTextNode(msg));
-  // append 'alertDiv' to DOM if none there & remove after 2.5s if present
-  if (!doc.querySelector('.alert')) container.insertBefore(alertDiv, header);
-  setTimeout(() => {
-   doc.querySelector('.alert') ? doc.querySelector('.alert').remove() : null;
-  }, 2500);
+  if (!document.querySelector('.alert')) {
+    const {container, header} = dom;
+    const alertDiv = newElement('div', `alert ${alertType}`);
+    alertDiv.appendChild(document.createTextNode(msg));
+    // append 'alertDiv' to DOM if none there & remove after 2.5s if present
+    container.insertBefore(alertDiv, header);
+    setTimeout(() => {
+      document.querySelector('.alert').remove();
+    }, 2500);
+  }
 };
 
 
@@ -54,7 +59,7 @@ const prepUrls = (username) => {
 };
 
 // FUNCTION - async/await. Fetch data from github 
-const getData = async(urls) => {
+const getData = async (urls) => {
   const profileRequest = await fetch(urls.profileUrl);
   const reposRequest = await fetch(urls.reposUrl);
 
@@ -74,28 +79,34 @@ const printer = (data) => {
   if (data) {
     const profile = data.profileData;
     const repos = data.reposData;
-    const profileFragment = doc.createDocumentFragment();
-    const reposFragment = doc.createDocumentFragment();
+    const profileFragment = document.createDocumentFragment();
+    const reposFragment = document.createDocumentFragment();
   
-    profileFragment.innerHTML = ( 
-      ` `
-    );
+
   
-    if (repos.length < 1) showAlert('error', `No repos found for '${profile.login}'`);
+    if (repos.length < 1) {
+      showAlert('error', `No repos found for '${profile.login}'`);
+    }
 
     return console.log(data);
   }
 };
 
 
-// eventListener on 'searchInput' - initializes & controls program
-searchInput.addEventListener('keyup', (event) => {
-  const username = event.target.value;
-  if (!username || (/^\s+$/).test(username)) {
-    return showAlert('error', 'Please enter a username');
-  }
-  const urls = prepUrls(username);
-  getData(urls)
-    .then(printer)
-    .catch(console.error);
-});
+// FUNCTION - initializes & controls program and eventListener on 'searchInput'
+const init = (() => {
+  const {searchInput} = dom;
+  const ctrl = (event) => {
+    const username = event.target.value.trim();
+    if (!username || (/^\s+$/).test(username)) {
+      return showAlert('error', 'Please enter a username');
+    }
+    const urls = prepUrls(username);
+
+    return getData(urls)
+      .then(printer)
+      .catch(console.error);
+  };
+
+  searchInput.addEventListener('keyup', ctrl)
+})();
